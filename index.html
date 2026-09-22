@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f2937">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Video Database">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Ultimate Video Database</title>
+<style>
+*{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;margin:0;background:#f3f4f6;color:#111827}main{max-width:620px;margin:auto;padding:20px 16px 36px}.card{background:white;border-radius:18px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.12);margin-bottom:16px}h1{font-size:26px;margin:0 0 6px}h2{font-size:20px;margin:0 0 14px}.sub{color:#4b5563;font-size:14px;margin-bottom:18px}label{display:block;font-weight:700;margin:16px 0 6px}input,select,button{font:inherit}input,select{width:100%;font-size:20px;padding:13px;border:1px solid #9ca3af;border-radius:10px;background:#fff}button{width:100%;border:0;border-radius:10px;padding:14px;margin-top:14px;font-size:19px;font-weight:700;background:#1f2937;color:white}button.secondary{background:#e5e7eb;color:#111827}button.danger{background:#b91c1c}.count{font-size:16px;font-weight:700;margin:4px 0 14px}.record{border:1px solid #d1d5db;border-radius:10px;padding:12px;margin:8px 0}.record-title{font-weight:700;font-size:17px}.record-meta{font-size:14px;color:#4b5563;margin-top:4px}.record-actions{display:flex;gap:8px}.record-actions button{font-size:14px;padding:9px;margin-top:9px}.status{padding:11px;border-radius:10px;background:#ecfdf5;color:#065f46;margin-bottom:12px;display:none}.note{font-size:13px;color:#6b7280;line-height:1.45;margin-top:14px}.hidden{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<div class="card">
+<h1>Ultimate Video Database</h1>
+<div class="sub">Phone Watch Entry</div>
+<div id="status" class="status"></div>
+<label for="title">Title</label>
+<input id="title" autocomplete="off" autocapitalize="words" placeholder="Enter movie or series title">
+<label for="service">Service</label>
+<select id="service"><option>Netflix</option><option>Prime Video</option><option>Hulu</option><option>Disney</option><option>HBO</option><option>Library</option></select>
+<label for="date">Watch Date</label>
+<input id="date" type="date">
+<button id="save">Save Record</button>
+<div class="note">Records are stored on this phone. Your PC does not need to be on. When you return to the PC, use <b>Import Phone Records</b> and select the exported JSON file.</div>
+</div>
+
+<div class="card">
+<h2>Saved on This Phone</h2>
+<div id="count" class="count">0 records</div>
+<button id="export">Export Records for PC</button>
+<button id="clear" class="danger">Clear Phone Records</button>
+<div id="list"></div>
+</div>
+</main>
+<script>
+// Export fix v5
+const KEY='ultimate_video_database_phone_records_v1';
+let records=[];
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY)||'[]');records=Array.isArray(x)?x:[]}catch(e){records=[]}}
+function persist(){localStorage.setItem(KEY,JSON.stringify(records))}
+function today(){const d=new Date();const y=d.getFullYear();const m=String(d.getMonth()+1).padStart(2,'0');const day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`}
+function fmt(d){if(!d)return '';const p=d.split('-');return p.length===3?`${p[1]}/${p[2]}/${p[0]}`:d}
+function show(msg){const s=document.getElementById('status');s.textContent=msg;s.style.display='block';clearTimeout(window.statusTimer);window.statusTimer=setTimeout(()=>s.style.display='none',3000)}
+function render(){document.getElementById('count').textContent=`${records.length} record${records.length===1?'':'s'}`;const list=document.getElementById('list');list.innerHTML='';[...records].reverse().forEach((r,revIndex)=>{const idx=records.length-1-revIndex;const div=document.createElement('div');div.className='record';div.innerHTML=`<div class="record-title"></div><div class="record-meta"></div><div class="record-actions"><button class="secondary edit">Edit</button><button class="danger delete">Delete</button></div>`;div.querySelector('.record-title').textContent=r.title;div.querySelector('.record-meta').textContent=`${r.service} • ${fmt(r.watch_date)}`;div.querySelector('.edit').onclick=()=>editRecord(idx);div.querySelector('.delete').onclick=()=>deleteRecord(idx);list.appendChild(div)})}
+function saveRecord(){const title=document.getElementById('title').value.trim();const service=document.getElementById('service').value;const watch_date=document.getElementById('date').value;if(!title){show('Enter a title first.');document.getElementById('title').focus();return}if(!watch_date){show('Select a watch date.');return}records.push({title,service,watch_date,source:'phone',created_at:new Date().toISOString()});persist();document.getElementById('title').value='';document.getElementById('date').value=today();document.getElementById('title').focus();render();show('Record saved on this phone.')}
+function editRecord(i){const r=records[i];const title=prompt('Title:',r.title);if(title===null)return;const clean=title.trim();if(!clean){show('Title cannot be blank.');return}const date=prompt('Watch date (YYYY-MM-DD):',r.watch_date);if(date===null)return;if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){show('Date must be YYYY-MM-DD.');return}r.title=clean;r.watch_date=date;persist();render();show('Record updated.')}
+function deleteRecord(i){if(!confirm(`Delete "${records[i].title}"?`))return;records.splice(i,1);persist();render();show('Record deleted.')}
+async function exportRecords(){
+  if(!records.length){show('There are no records to export.');return}
+
+  const payload={
+    format:'Ultimate Master Video Database Phone Records',
+    version:1,
+    exported_at:new Date().toISOString(),
+    records:records.map(r=>({title:r.title,service:r.service,watch_date:r.watch_date,source:'phone'}))
+  };
+
+  const json=JSON.stringify(payload,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const file=new File([blob],'Phone_Video_Records.json',{type:'application/json'});
+
+  // On Android, use the system Share/Save sheet when file sharing is supported.
+  // If the share sheet is unavailable or fails, fall back to a normal download.
+  if(navigator.share && navigator.canShare){
+    try{
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({
+          title:'Phone Video Records',
+          text:'Ultimate Master Video Database records',
+          files:[file]
+        });
+        show('Phone_Video_Records.json is ready to save or share.');
+        return;
+      }
+    }catch(error){
+      if(error && error.name==='AbortError'){
+        show('Export cancelled.');
+        return;
+      }
+    }
+  }
+
+  // Browser/PWA fallback: download the JSON file directly.
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='Phone_Video_Records.json';
+  a.rel='noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+  show('Phone_Video_Records.json downloaded. Use it to import records on the PC.');
+}
+function clearRecords(){if(!records.length)return;if(!confirm(`Delete all ${records.length} phone records? This does not affect the PC database.`))return;records=[];persist();render();show('Phone records cleared.')}
+document.getElementById('save').onclick=saveRecord;document.getElementById('export').onclick=exportRecords;document.getElementById('clear').onclick=clearRecords;document.getElementById('title').addEventListener('keydown',e=>{if(e.key==='Enter')saveRecord()});load();document.getElementById('date').value=today();render();
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+</body>
+</html>
