@@ -1,0 +1,5 @@
+ULTIMATE VIDEO DATABASE PHONE APP v6
+
+New in v6: optional Movie/Series classification and Season number for Series. Existing phone records are preserved. Records without the new fields remain usable.
+
+Replace index.html and sw.js in the GitHub Pages repository with these files. The cache version is v6.
