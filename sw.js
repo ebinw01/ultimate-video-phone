@@ -1,4 +1,4 @@
-const CACHE = 'ultimate-video-phone-v7';
+const CACHE = 'ultimate-video-phone-v8';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', event => {
