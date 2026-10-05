@@ -147,27 +147,69 @@ function queryDatabase(){
     div.appendChild(title);div.appendChild(status);div.appendChild(meta);box.appendChild(div);
   });
 }
+const DB_STORE='ultimate_video_database_phone_query_v2';
+let dbPromise=null;
+function openPhoneDatabase(){
+  if(dbPromise)return dbPromise;
+  dbPromise=new Promise((resolve,reject)=>{
+    if(!window.indexedDB){reject(new Error('IndexedDB is not available on this phone/browser.'));return}
+    const req=indexedDB.open(DB_STORE,1);
+    req.onupgradeneeded=()=>{
+      const db=req.result;
+      if(!db.objectStoreNames.contains('database'))db.createObjectStore('database');
+    };
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error||new Error('Could not open phone database storage.'));
+  });
+  return dbPromise;
+}
+async function savePhoneDatabase(titles,updatedAt){
+  const db=await openPhoneDatabase();
+  await new Promise((resolve,reject)=>{
+    const tx=db.transaction('database','readwrite');
+    tx.objectStore('database').put({titles,updated_at:updatedAt},'current');
+    tx.oncomplete=resolve;
+    tx.onerror=()=>reject(tx.error||new Error('Could not save phone database.'));
+    tx.onabort=()=>reject(tx.error||new Error('Could not save phone database.'));
+  });
+}
+async function getPhoneDatabase(){
+  const db=await openPhoneDatabase();
+  return await new Promise((resolve,reject)=>{
+    const tx=db.transaction('database','readonly');
+    const req=tx.objectStore('database').get('current');
+    req.onsuccess=()=>resolve(req.result||null);
+    req.onerror=()=>reject(req.error||new Error('Could not read phone database.'));
+  });
+}
 async function loadDatabaseFile(){
   const input=document.getElementById('db_file');
   const file=input.files&&input.files[0];
   if(!file){show('Select the database JSON file first.');return}
   try{
+    show('Loading PC database...');
     const payload=JSON.parse(await file.text());
     if(payload.format!=='Ultimate Master Video Database Phone Query' || !Array.isArray(payload.titles))throw new Error('This is not a valid phone database file.');
-    databaseTitles=payload.titles.map(normalizeDatabaseTitle).filter(r=>r.title);
+    const titles=payload.titles.map(normalizeDatabaseTitle).filter(r=>r.title);
+    if(!titles.length)throw new Error('The database file contains no usable titles.');
+    databaseTitles=titles;
     databaseUpdatedAt=payload.exported_at||'';
-    localStorage.setItem('ultimate_video_database_phone_query_v1',JSON.stringify({updated_at:databaseUpdatedAt,titles:databaseTitles}));
+    await savePhoneDatabase(databaseTitles,databaseUpdatedAt);
     renderDatabaseInfo();
     document.getElementById('db_results').innerHTML='';
     input.value='';
     show(`PC database loaded: ${databaseTitles.length.toLocaleString()} titles.`);
-  }catch(e){show('Could not load that file. Use the JSON file created by Export_Database_For_Phone.py.');console.error(e)}
+  }catch(e){
+    console.error(e);
+    show('Could not load the PC database. Please make sure you are using the Video_Database_For_Phone.json created by Master Control.');
+  }
 }
-function loadDatabaseFromStorage(){
+async function loadDatabaseFromStorage(){
   try{
-    const x=JSON.parse(localStorage.getItem('ultimate_video_database_phone_query_v1')||'null');
+    const x=await getPhoneDatabase();
     if(x&&Array.isArray(x.titles)){databaseTitles=x.titles.map(normalizeDatabaseTitle);databaseUpdatedAt=x.updated_at||''}
-  }catch(e){databaseTitles=[];databaseUpdatedAt=''}
+  }catch(e){databaseTitles=[];databaseUpdatedAt='';console.error(e)}
+  renderDatabaseInfo();
 }
 
 function normalizeRecord(r){
