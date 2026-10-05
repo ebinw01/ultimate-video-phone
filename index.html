@@ -10,11 +10,25 @@
 <link rel="manifest" href="manifest.webmanifest">
 <title>Ultimate Video Database</title>
 <style>
-*{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;margin:0;background:#f3f4f6;color:#111827}main{max-width:620px;margin:auto;padding:20px 16px 36px}.card{background:white;border-radius:18px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.12);margin-bottom:16px}h1{font-size:26px;margin:0 0 6px}h2{font-size:20px;margin:0 0 14px}.sub{color:#4b5563;font-size:14px;margin-bottom:18px}label{display:block;font-weight:700;margin:16px 0 6px}input,select,button{font:inherit}input,select{width:100%;font-size:20px;padding:13px;border:1px solid #9ca3af;border-radius:10px;background:#fff}button{width:100%;border:0;border-radius:10px;padding:14px;margin-top:14px;font-size:19px;font-weight:700;background:#1f2937;color:white}button.secondary{background:#e5e7eb;color:#111827}button.danger{background:#b91c1c}.count{font-size:16px;font-weight:700;margin:4px 0 14px}.record{border:1px solid #d1d5db;border-radius:10px;padding:12px;margin:8px 0}.record-title{font-weight:700;font-size:17px}.record-meta{font-size:14px;color:#4b5563;margin-top:4px}.record-actions{display:flex;gap:8px}.record-actions button{font-size:14px;padding:9px;margin-top:9px}.status{padding:11px;border-radius:10px;background:#ecfdf5;color:#065f46;margin-bottom:12px;display:none}.note{font-size:13px;color:#6b7280;line-height:1.45;margin-top:14px}.service-row{display:flex;gap:8px;align-items:center;border:1px solid #d1d5db;border-radius:10px;padding:10px;margin:7px 0}.service-name{flex:1;font-size:17px}.service-row button{width:auto;margin:0;padding:8px 12px;font-size:14px}.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-start;justify-content:center;padding:30px 14px;overflow:auto;z-index:1000}.modal-card{background:white;border-radius:18px;padding:20px;width:100%;max-width:560px;box-shadow:0 8px 30px rgba(0,0,0,.25)}.modal-buttons{display:flex;gap:8px}.modal-buttons button{flex:1}.hidden{display:none!important}
+*{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;margin:0;background:#f3f4f6;color:#111827}main{max-width:620px;margin:auto;padding:20px 16px 36px}.card{background:white;border-radius:18px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.12);margin-bottom:16px}h1{font-size:26px;margin:0 0 6px}h2{font-size:20px;margin:0 0 14px}.sub{color:#4b5563;font-size:14px;margin-bottom:18px}label{display:block;font-weight:700;margin:16px 0 6px}input,select,button{font:inherit}input,select{width:100%;font-size:20px;padding:13px;border:1px solid #9ca3af;border-radius:10px;background:#fff}button{width:100%;border:0;border-radius:10px;padding:14px;margin-top:14px;font-size:19px;font-weight:700;background:#1f2937;color:white}button.secondary{background:#e5e7eb;color:#111827}button.danger{background:#b91c1c}.count{font-size:16px;font-weight:700;margin:4px 0 14px}.record{border:1px solid #d1d5db;border-radius:10px;padding:12px;margin:8px 0}.record-title{font-weight:700;font-size:17px}.record-meta{font-size:14px;color:#4b5563;margin-top:4px}.record-actions{display:flex;gap:8px}.record-actions button{font-size:14px;padding:9px;margin-top:9px}.status{padding:11px;border-radius:10px;background:#ecfdf5;color:#065f46;margin-bottom:12px;display:none}.note{font-size:13px;color:#6b7280;line-height:1.45;margin-top:14px}.service-row{display:flex;gap:8px;align-items:center;border:1px solid #d1d5db;border-radius:10px;padding:10px;margin:7px 0}.service-name{flex:1;font-size:17px}.service-row button{width:auto;margin:0;padding:8px 12px;font-size:14px}.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-start;justify-content:center;padding:30px 14px;overflow:auto;z-index:1000}.modal-card{background:white;border-radius:18px;padding:20px;width:100%;max-width:560px;box-shadow:0 8px 30px rgba(0,0,0,.25)}.modal-buttons{display:flex;gap:8px}.modal-buttons button{flex:1}.hidden{display:none!important}.query-results{margin-top:12px}.query-result{border:1px solid #d1d5db;border-radius:10px;padding:12px;margin:8px 0}.query-title{font-weight:800;font-size:18px}.query-status{font-weight:800;font-size:16px;margin-top:4px}.watched{color:#065f46}.not-watched{color:#991b1b}.query-meta{font-size:14px;color:#4b5563;margin-top:5px;line-height:1.45}.query-small{font-size:13px;color:#6b7280;margin-top:8px}.file-row{display:flex;gap:8px;align-items:center}.file-row button{flex:1}.file-row input{font-size:14px;padding:10px}
 </style>
 </head>
 <body>
 <main>
+<div class="card">
+<h2>Check Database</h2>
+<div class="sub">Search your PC database from your phone while watching TV.</div>
+<label for="db_query">Movie or Series Title</label>
+<input id="db_query" autocomplete="off" autocapitalize="words" placeholder="Enter a title to check">
+<button id="db_search">Search Database</button>
+<div class="file-row">
+  <button id="db_load" class="secondary">Load Updated PC Database</button>
+  <input id="db_file" type="file" accept="application/json,.json">
+</div>
+<div id="db_info" class="query-small">No PC database has been loaded onto this phone yet.</div>
+<div id="db_results" class="query-results"></div>
+</div>
+
 <div class="card">
 <h1>Ultimate Video Database</h1>
 <div class="sub">Phone Watch Entry</div>
@@ -85,6 +99,76 @@ const RATINGS=['Liked','Didn\'t Like','Not Rated'];
 let records=[];
 let services=[];
 let editingIndex=-1;
+let databaseTitles=[];
+let databaseUpdatedAt='';
+
+
+function normalizeDatabaseTitle(r){
+  const x={...r};
+  x.title=String(x.title||'').trim();
+  x.normalized_title=String(x.normalized_title||x.title).trim().toLowerCase();
+  x.services=Array.isArray(x.services)?x.services.map(v=>String(v).trim()).filter(Boolean):[];
+  x.content_types=Array.isArray(x.content_types)?x.content_types.map(v=>String(v).trim()).filter(Boolean):[];
+  x.seasons=Array.isArray(x.seasons)?x.seasons.map(v=>String(v).trim()).filter(Boolean):[];
+  x.watch_dates=Array.isArray(x.watch_dates)?x.watch_dates.map(v=>String(v).trim()).filter(Boolean):[];
+  x.personal_ratings=Array.isArray(x.personal_ratings)?x.personal_ratings.map(v=>String(v).trim()).filter(Boolean):[];
+  return x;
+}
+function renderDatabaseInfo(){
+  const info=document.getElementById('db_info');
+  if(!databaseTitles.length){info.textContent='No PC database has been loaded onto this phone yet.';return}
+  const when=databaseUpdatedAt?` • Updated ${fmtDateTime(databaseUpdatedAt)}`:'';
+  info.textContent=`PC database loaded: ${databaseTitles.length.toLocaleString()} titles${when}`;
+}
+function fmtDateTime(value){
+  if(!value)return '';
+  const d=new Date(value);if(Number.isNaN(d.getTime()))return String(value);
+  return d.toLocaleDateString()+' '+d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+}
+function queryDatabase(){
+  const q=document.getElementById('db_query').value.trim().toLowerCase();
+  const box=document.getElementById('db_results');box.innerHTML='';
+  if(!databaseTitles.length){show('Load the updated PC database onto the phone first.');return}
+  if(!q){show('Enter a movie or series title to search.');document.getElementById('db_query').focus();return}
+  const matches=databaseTitles.filter(r=>(r.title||'').toLowerCase().includes(q)||(r.normalized_title||'').includes(q)).slice(0,50);
+  if(!matches.length){box.innerHTML='<div class="query-result"><div class="query-title">No match found</div><div class="query-meta">This title is not in the PC watch history database.</div></div>';return}
+  matches.forEach(r=>{
+    const div=document.createElement('div');div.className='query-result';
+    const title=document.createElement('div');title.className='query-title';title.textContent=r.title||'(Untitled)';
+    const status=document.createElement('div');status.className='query-status watched';status.textContent='WATCHED';
+    const meta=document.createElement('div');meta.className='query-meta';
+    const parts=[];
+    if(r.content_types.length)parts.push(r.content_types.join(', '));
+    if(r.seasons.length)parts.push('Seasons: '+r.seasons.join(', '));
+    if(r.services.length)parts.push('Service: '+r.services.join(', '));
+    if(r.personal_ratings.length)parts.push('Rating: '+[...new Set(r.personal_ratings)].join(', '));
+    if(r.watch_dates.length)parts.push('Dates: '+r.watch_dates.map(fmt).join(', '));
+    meta.textContent=parts.join(' • ');
+    div.appendChild(title);div.appendChild(status);div.appendChild(meta);box.appendChild(div);
+  });
+}
+async function loadDatabaseFile(){
+  const input=document.getElementById('db_file');
+  const file=input.files&&input.files[0];
+  if(!file){show('Select the database JSON file first.');return}
+  try{
+    const payload=JSON.parse(await file.text());
+    if(payload.format!=='Ultimate Master Video Database Phone Query' || !Array.isArray(payload.titles))throw new Error('This is not a valid phone database file.');
+    databaseTitles=payload.titles.map(normalizeDatabaseTitle).filter(r=>r.title);
+    databaseUpdatedAt=payload.exported_at||'';
+    localStorage.setItem('ultimate_video_database_phone_query_v1',JSON.stringify({updated_at:databaseUpdatedAt,titles:databaseTitles}));
+    renderDatabaseInfo();
+    document.getElementById('db_results').innerHTML='';
+    input.value='';
+    show(`PC database loaded: ${databaseTitles.length.toLocaleString()} titles.`);
+  }catch(e){show('Could not load that file. Use the JSON file created by Export_Database_For_Phone.py.');console.error(e)}
+}
+function loadDatabaseFromStorage(){
+  try{
+    const x=JSON.parse(localStorage.getItem('ultimate_video_database_phone_query_v1')||'null');
+    if(x&&Array.isArray(x.titles)){databaseTitles=x.titles.map(normalizeDatabaseTitle);databaseUpdatedAt=x.updated_at||''}
+  }catch(e){databaseTitles=[];databaseUpdatedAt=''}
+}
 
 function normalizeRecord(r){
   const x={...r};
@@ -258,8 +342,11 @@ document.getElementById('addService').onclick=addService;
 document.getElementById('edit_save').onclick=saveEditModal;
 document.getElementById('edit_cancel').onclick=closeEditModal;
 document.getElementById('editModal').addEventListener('click',e=>{if(e.target.id==='editModal')closeEditModal()});
+document.getElementById('db_search').onclick=queryDatabase;
+document.getElementById('db_load').onclick=loadDatabaseFile;
+document.getElementById('db_query').addEventListener('keydown',e=>{if(e.key==='Enter')queryDatabase()});
 document.getElementById('title').addEventListener('keydown',e=>{if(e.key==='Enter')saveRecord()});
-load();loadServices();renderServiceChoices();renderServiceManager();document.getElementById('date').value=today();document.getElementById('content_type').value='Movie';document.getElementById('season_wrap').classList.add('hidden');document.getElementById('personal_rating').value='Not Rated';render();
+loadDatabaseFromStorage();load();loadServices();renderServiceChoices();renderServiceManager();renderDatabaseInfo();document.getElementById('date').value=today();document.getElementById('content_type').value='Movie';document.getElementById('season_wrap').classList.add('hidden');document.getElementById('personal_rating').value='Not Rated';render();
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
 </body>

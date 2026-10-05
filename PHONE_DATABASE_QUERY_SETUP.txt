@@ -1,0 +1,21 @@
+PHONE DATABASE QUERY - SETUP
+
+1. On the PC, put Export_Database_For_Phone.py in:
+   C:\Ultimate_Master_Video_Database\Scripts
+
+2. Run it from the Scripts folder:
+   python Export_Database_For_Phone.py
+
+3. It creates:
+   C:\Ultimate_Master_Video_Database\Input_Files\Phone\Video_Database_For_Phone.json
+
+4. Move/copy that JSON file to your phone (AirDrop, email to yourself, cloud drive, USB, etc.).
+
+5. Open the Ultimate Video Database phone app.
+   Tap "Load Updated PC Database" and select Video_Database_For_Phone.json.
+
+6. Enter a movie or series title in "Check Database" and tap "Search Database".
+
+The phone stores the last loaded database locally, so you can query it later without the PC being on.
+
+When the PC database changes, run the export script again and load the new JSON on the phone.
