@@ -94,7 +94,7 @@
 <script>// Phone app merged build: Personal Rating + Series + Service Manager.
 const KEY='ultimate_video_database_phone_records_v1';
 const DB_NAME='ultimate_video_database_phone_db';
-const DB_VERSION=1;
+const DB_VERSION=2;
 const DB_STORE='query_database';
 const SERVICE_KEY='ultimate_video_database_phone_services_v1';
 const DEFAULT_SERVICES=['Netflix','Prime Video','Hulu','Disney','HBO','Library','Other'];
@@ -154,27 +154,63 @@ function openQueryDB(){
   return new Promise((resolve,reject)=>{
     if(!window.indexedDB){reject(new Error('IndexedDB is not available on this phone/browser.'));return}
     const req=indexedDB.open(DB_NAME,DB_VERSION);
-    req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(DB_STORE))db.createObjectStore(DB_STORE)};
+    req.onupgradeneeded=()=>{
+      const db=req.result;
+      let store;
+      if(!db.objectStoreNames.contains(DB_STORE)) store=db.createObjectStore(DB_STORE);
+      else store=req.transaction.objectStore(DB_STORE);
+      try{ store.clear(); }catch(e){}
+    };
     req.onsuccess=()=>resolve(req.result);
     req.onerror=()=>reject(req.error||new Error('Could not open phone database storage.'));
   });
 }
+function readSelectedFile(file){
+  if(file&&typeof file.text==='function') return file.text();
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(String(reader.result||''));
+    reader.onerror=()=>reject(reader.error||new Error('The phone could not read the selected file.'));
+    reader.readAsText(file);
+  });
+}
 async function saveQueryDatabase(titles,updatedAt){
   const db=await openQueryDB();
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(DB_STORE,'readwrite');
-    tx.objectStore(DB_STORE).put({titles,updated_at:updatedAt},'current');
-    tx.oncomplete=()=>{db.close();resolve()};
-    tx.onerror=()=>{db.close();reject(tx.error||new Error('Could not save database on phone.'))};
-    tx.onabort=()=>{db.close();reject(tx.error||new Error('Database save was aborted.'))};
-  });
+  try{
+    await new Promise((resolve,reject)=>{
+      const tx=db.transaction(DB_STORE,'readwrite');
+      tx.objectStore(DB_STORE).clear();
+      const meta={kind:'meta',count:titles.length,updated_at:updatedAt};
+      tx.objectStore(DB_STORE).put(meta,'__meta__');
+      tx.oncomplete=()=>resolve();
+      tx.onerror=()=>reject(tx.error||new Error('Could not initialize phone database storage.'));
+      tx.onabort=()=>reject(tx.error||new Error('Phone database storage was aborted.'));
+    });
+    const batchSize=250;
+    for(let start=0;start<titles.length;start+=batchSize){
+      const batch=titles.slice(start,start+batchSize);
+      await new Promise((resolve,reject)=>{
+        const tx=db.transaction(DB_STORE,'readwrite');
+        const store=tx.objectStore(DB_STORE);
+        batch.forEach((title,i)=>store.put(title,'title_'+String(start+i).padStart(6,'0')));
+        tx.oncomplete=()=>resolve();
+        tx.onerror=()=>reject(tx.error||new Error(`Could not save database records ${start+1}-${Math.min(start+batchSize,titles.length)}.`));
+        tx.onabort=()=>reject(tx.error||new Error('Phone database storage was aborted.'));
+      });
+    }
+  }finally{db.close()}
 }
 async function readQueryDatabase(){
   const db=await openQueryDB();
   return new Promise((resolve,reject)=>{
     const tx=db.transaction(DB_STORE,'readonly');
-    const req=tx.objectStore(DB_STORE).get('current');
-    req.onsuccess=()=>{const value=req.result;db.close();resolve(value||null)};
+    const req=tx.objectStore(DB_STORE).getAll();
+    req.onsuccess=()=>{
+      const rows=Array.isArray(req.result)?req.result:[];
+      const meta=rows.find(x=>x&&x.kind==='meta')||null;
+      const titles=rows.filter(x=>x&&x.kind!=='meta'&&x.title).map(normalizeDatabaseTitle);
+      db.close();resolve({titles,updated_at:meta&&meta.updated_at?meta.updated_at:''});
+    };
     req.onerror=()=>{db.close();reject(req.error||new Error('Could not read phone database.'))};
   });
 }
@@ -183,19 +219,20 @@ async function loadDatabaseFile(){
   const file=input.files&&input.files[0];
   if(!file){show('Select the database JSON file first.');return}
   try{
-    show('Loading PC database…');
-    const text=await file.text();
+    show(`Reading ${file.name}…`);
+    const text=await readSelectedFile(file);
     const payload=JSON.parse(text);
     if(payload.format!=='Ultimate Master Video Database Phone Query' || !Array.isArray(payload.titles))throw new Error('This is not a valid phone database file.');
     const titles=payload.titles.map(normalizeDatabaseTitle).filter(r=>r.title);
     if(!titles.length)throw new Error('The database file contains no usable titles.');
+    show(`Saving ${titles.length.toLocaleString()} titles to the phone…`);
     await saveQueryDatabase(titles,payload.exported_at||'');
     databaseTitles=titles;
     databaseUpdatedAt=payload.exported_at||'';
     renderDatabaseInfo();
     document.getElementById('db_results').innerHTML='';
     input.value='';
-    show(`PC database loaded: ${databaseTitles.length.toLocaleString()} titles.`);
+    show(`PC database loaded successfully: ${databaseTitles.length.toLocaleString()} titles.`);
   }catch(e){
     console.error('PC database load failed:',e);
     show(`Could not load the PC database. ${e.message||'Please try again.'}`);
@@ -204,8 +241,8 @@ async function loadDatabaseFile(){
 async function loadDatabaseFromStorage(){
   try{
     const x=await readQueryDatabase();
-    if(x&&Array.isArray(x.titles)){
-      databaseTitles=x.titles.map(normalizeDatabaseTitle).filter(r=>r.title);
+    if(x&&Array.isArray(x.titles)&&x.titles.length){
+      databaseTitles=x.titles;
       databaseUpdatedAt=x.updated_at||'';
       renderDatabaseInfo();
     }
